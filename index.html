@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>The Secret Helper Website</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+  <style>
+   html, body { display:flex; flex-direction: column; background-color: #41586C; width: 100%; height: 100%; margin:0; padding:0; align-items:center;}
+    #map {display: flex; width: 80vw; height: 80vh; border: 4px solid RGB(0,150,255); justify-content: center; align-items: center;}
+    h1 { color: rgb(0,150,255); text-decoration: underline wavy; text-underline-offset: 10px; text-align: center; text-shadow: 3px 3px 5px black}
+   #image {pointer-events: none; transition: transform 0.2s ease; z-index: 1000; height: 78vh; width: auto; max-height: 100%;}
+#controls {
+  display: flex;
+  flex-wrap: wrap;              /* allow wrapping to new rows */
+  gap: 10px;                    /* space between items */
+  justify-content: center;      /* center them horizontally */
+  background-color: rgba(0, 0, 0, 0.2); /* optional styling */
+  padding: 10px;
+  border-radius: 8px;           /* optional rounded edges */
+  max-width: 80vw;              /* keeps it from stretching too wide */
+}
+
+#controls label,
+#controls button {
+  display: flex;
+  align-items: center;          /* vertically center text/inputs */
+  gap: 5px;                     /* space between label and slider */
+  background: rgba(255,255,255,0.1);
+  padding: 5px 8px;
+  border-radius: 4px;
+  color: white;
+}
+
+input[type=range] {
+  -webkit-appearance: none; /* Remove default */
+  appearance: none;
+  width: 150px;
+  height: 6px;
+  background: #333;  /* Fallback track color before styling */
+  border-radius: 3px;
+}
+
+/* Track for Chrome/Edge/Safari */
+input[type=range]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: linear-gradient(to left, rgb(0,150,255), rgb(0,80,150));
+  border-radius: 3px;
+}
+
+/* Thumb for Chrome/Edge/Safari */
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  background: white;
+  border-radius: 50%;
+  border: 2px solid rgb(0,150,255);
+  cursor: pointer;
+  margin-top: -5px; /* Centers thumb on track */
+}
+   #mapPage {width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;}
+#mapWrapper {
+  position: relative;
+  display: inline-block;
+}
+#resizeHandle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  background: rgba(0,150,255,0.7);
+  cursor: ne-resize;
+  z-index: 1000;
+}
+  header {
+     display: flex;
+     position: relative;
+     justify-content: center;
+}
+nav {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding: 10px;
+  width:60vw;
+}
+
+nav a {
+  text-decoration: none;
+  color: white;
+  width: 10vw;
+  background-color: black;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+nav a:hover {
+   background-color: white;
+   color: black;
+   transition: .5s ease-in-out;
+}
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html">Map Helper</a>
+      <a href="imageViewer.html">Image Viewer</a>
+    </nav>
+  </header>
+<div id = "mapPage">
+  <h1>The Secret Map Helper!</h1>
+<div id = 'mapWrapper'>
+  <div id="map">
+      <img id = "image" src = "" style = "opacity:1; display: none;">
+ </div>
+<div id='resizeHandle'></div>
+</div>
+
+<div id="controls">
+    <label>
+      Select Image:
+      <select id="imageSelect">
+        <option value="">-- Choose --</option>
+        <option value="overlay1.png">Image 1</option>
+        <option value="overlay2.png">Image 2</option>
+        <option value="overlay3.png">Image 3</option>
+        <option value="overlay4.png">Image 4</option>
+        <option value="overlay5.png">Image 5</option>
+        <option value="overlay6.png">Image 6</option>
+        <option value="overlay7.png">Image 7</option>
+        <option value="overlay8.png">Image 8</option>
+        <option value="overlay9.png">Image 9</option>
+        <option value="overlay10.png">Image 10</option>
+        <option value="overlay11.png">Image 11</option>
+        <option value="overlay12.png">Image 12</option>
+      </select>
+    </label>
+    <label>
+      Opacity:
+      <input type="range" id="opacitySlider" min="0" max="1" step="0.05" value="1">
+    </label>
+    <label>
+      Rotation:
+      <input type="range" id="rotationSlider" min="0" max="360" step="1" value="0">
+    </label>
+    <button id="flipButton">Flip Horizontal</button>
+<label>
+  Brightness:
+  <input type="range" id="brightnessSlider" min="0" max="200" step="1" value="100">
+</label>
+<label>
+  Contrast:
+  <input type="range" id="contrastSlider" min="0" max="200" step="1" value="100">
+</label>
+<label>
+  Saturation:
+  <input type="range" id="saturationSlider" min="0" max="200" step="1" value="100">
+</label>
+<label>
+  Grayscale:
+  <input type="range" id="grayscaleSlider" min="0" max="100" step="1" value="0">
+</label>
+  </div>
+<button id="resetImage">Reset Image</button>
+
+</div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script>
+
+// Create the map first
+const map = L.map('map').setView([40.000, -100.000], 2);
+
+// Now create the tile layers WITHOUT .addTo(map)
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  minZoom: 2
+});
+
+const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+});
+
+// Add default tile layer to the map
+osm.addTo(map);
+
+  var popup = L.popup();
+
+  function onMapClick(e) {
+    popup
+      .setLatLng(e.latlng)
+      .setContent("You clicked the map at  " + e.latlng.toString())
+      .openOn(map);
+  }
+
+  map.on('click', onMapClick);
+
+  map.on('zoomend', function () {
+    console.log("Zoom level changed to:", map.getZoom());
+  });
+
+  L.Control.geocoder({
+    defaultMarkGeocode: false
+  })
+    .on('markgeocode', function (e) {
+      map.fitBounds(e.geocode.bbox);
+    })
+    .addTo(map);
+const baseLayers = {
+  "OpenStreetMap": osm,
+  "Satellite": satellite
+};
+
+L.control.layers(baseLayers).addTo(map);
+
+//////////////////////////////////////////////////////////     Image Controls     \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+const overlayImg = document.getElementById('image');
+    let rotation = 0;
+    let flipped = false;
+
+    document.getElementById('imageSelect').addEventListener('change', function() {
+      const imgFile = this.value;
+      if (imgFile) {
+        overlayImg.src = imgFile;
+        overlayImg.style.display = 'block';
+      } else {
+        overlayImg.style.display = 'none';
+      }
+    });
+
+    document.getElementById('opacitySlider').addEventListener('input', function() {
+      overlayImg.style.opacity = this.value;
+    });
+
+    document.getElementById('rotationSlider').addEventListener('input', function() {
+      rotation = this.value;
+      applyTransform();
+    });
+
+    document.getElementById('flipButton').addEventListener('click', function() {
+      flipped = !flipped;
+      applyTransform();
+    });
+
+    function applyTransform() {
+      overlayImg.style.transform = `rotate(${rotation}deg) scaleX(${flipped ? -1 : 1})`;
+    }
+function applyFilters() {
+  const brightness = document.getElementById('brightnessSlider').value;
+  const contrast = document.getElementById('contrastSlider').value;
+  const saturation = document.getElementById('saturationSlider').value;
+  const grayscale = document.getElementById('grayscaleSlider').value;
+
+  overlayImg.style.filter = 
+    `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) grayscale(${grayscale}%)`;
+}
+
+// Add listeners
+document.getElementById('brightnessSlider').addEventListener('input', applyFilters);
+document.getElementById('contrastSlider').addEventListener('input', applyFilters);
+document.getElementById('saturationSlider').addEventListener('input', applyFilters);
+document.getElementById('grayscaleSlider').addEventListener('input', applyFilters);
+
+function resizeOverlayImage() {
+  const mapEl = document.getElementById('map');
+  overlayImg.style.height = (mapEl.offsetHeight-10) + 'px';
+  overlayImg.style.width = 'auto';
+}
+
+window.addEventListener('resize', resizeOverlayImage);
+
+// Call it initially when an image is loaded
+overlayImg.onload = resizeOverlayImage;
+
+// Resets Image
+document.getElementById('resetImage').addEventListener('click', () => {
+  rotation = 0;
+  flipped = false;
+  document.getElementById('rotationSlider').value = 0;
+  document.getElementById('opacitySlider').value = 1;
+  document.getElementById('brightnessSlider').value = 100;
+  document.getElementById('contrastSlider').value = 100;
+  document.getElementById('saturationSlider').value = 100;
+  document.getElementById('grayscaleSlider').value = 0;
+  overlayImg.style.opacity = 1;
+  applyTransform();
+  applyFilters();
+});
+
+/////////////////////////////////////////////////////////////     Map Drag to Resize     \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+const wrapper = document.getElementById('mapWrapper');
+const mapEl = document.getElementById('map');
+const handle = document.getElementById('resizeHandle');
+
+let isResizing = false;
+
+handle.addEventListener('mousedown', e => {
+  isResizing = true;
+  document.body.style.userSelect = 'none';
+});
+
+window.addEventListener('mousemove', e => {
+  if (!isResizing) return;
+  const newWidth = wrapper.getBoundingClientRect().right - e.clientX;
+  const newHeight = e.clientY - wrapper.getBoundingClientRect().top;
+  mapEl.style.width = newWidth + 'px';
+  mapEl.style.height = newHeight + 'px';
+  map.invalidateSize();
+  resizeOverlayImage();
+});
+
+window.addEventListener('mouseup', e => {
+  isResizing = false;
+  document.body.style.userSelect = '';
+});
+</script>
+
+</body>
+</html>

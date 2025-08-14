@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>The Secret Helper Website</title>
+  <style>
+    html, body {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #41586C;
+      color: rgb(0,150,255);
+    }
+    #layout {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      flex-grow: 1;
+      display: flex;
+      background-color: #41586C;
+      font-family: sans-serif;
+      color: rgb(0,150,255);
+    }
+    #sidebar {
+      width: 300px;
+      max-height: 100%;
+      padding: 20px;
+      background-color: #2f3a4b;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: hidden;
+      box-sizing: border-box;
+    }
+#sidebar label,
+#sidebar button {
+  display: flex;
+  align-items: center;          /* vertically center text/inputs */
+  justify-content: center;
+  gap: 5px;                     /* space between label and slider */
+  background: rgba(255,255,255,0.1);
+  padding: 5px 8px;
+  border-radius: 4px;
+  color: white;
+}
+
+input[type=range] {
+  -webkit-appearance: none; /* Remove default */
+  appearance: none;
+  width: 150px;
+  height: 6px;
+  background: #333;  /* Fallback track color before styling */
+  border-radius: 3px;
+}
+
+/* Track for Chrome/Edge/Safari */
+input[type=range]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: linear-gradient(to left, rgb(0,150,255), rgb(0,80,150));
+  border-radius: 3px;
+}
+
+/* Thumb for Chrome/Edge/Safari */
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  background: white;
+  border-radius: 50%;
+  border: 2px solid rgb(0,150,255);
+  cursor: pointer;
+  margin-top: -5px; /* Centers thumb on track */
+}
+    #imageContainer {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+      cursor: grab;
+    }
+
+    #image {
+      max-width: 100%;
+      max-height: 100%;
+      pointer-events: none;
+      transition: transform 0.2s ease;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    input[type="range"], select, button {
+      width: 100%;
+    }
+  header {
+     display: flex;
+     position: relative;
+     justify-content: center;
+}
+nav {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding: 10px;
+  width:60vw;
+}
+
+nav a {
+  text-decoration: none;
+  color: white;
+  width: 10vw;
+  background-color: black;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+nav a:hover {
+   background-color: white;
+   color: black;
+   transition: .5s ease-in-out;
+}
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html">Map Helper</a>
+      <a href="imageViewer.html">Image Viewer</a>
+    </nav>
+  </header>
+
+<div id='layout'>
+<div id="sidebar">
+  <label>
+    Select Image:
+    <select id="imageSelect">
+ <option value="">-- Choose --</option>
+        <option value="overlay1.png">Image 1</option>
+        <option value="overlay2.png">Image 2</option>
+        <option value="overlay3.png">Image 3</option>
+        <option value="overlay4.png">Image 4</option>
+        <option value="overlay5.png">Image 5</option>
+        <option value="overlay6.png">Image 6</option>
+        <option value="overlay7.png">Image 7</option>
+        <option value="overlay8.png">Image 8</option>
+        <option value="overlay9.png">Image 9</option>
+        <option value="overlay10.png">Image 10</option>
+        <option value="overlay11.png">Image 11</option>
+        <option value="overlay12.png">Image 12</option>
+    </select>
+  </label>
+
+  <label>
+    Opacity:
+    <input type="range" id="opacitySlider" min="0" max="1" step="0.05" value="1">
+  </label>
+
+  <label>
+    Rotation:
+    <input type="range" id="rotationSlider" min="0" max="360" step="1" value="0">
+  </label>
+
+  <button id="flipButton">Flip Horizontal</button>
+
+  <label>
+    Brightness:
+    <input type="range" id="brightnessSlider" min="0" max="200" step="1" value="100">
+  </label>
+
+  <label>
+    Contrast:
+    <input type="range" id="contrastSlider" min="0" max="200" step="1" value="100">
+  </label>
+
+  <label>
+    Saturation:
+    <input type="range" id="saturationSlider" min="0" max="200" step="1" value="100">
+  </label>
+
+  <label>
+    Grayscale:
+    <input type="range" id="grayscaleSlider" min="0" max="100" step="1" value="0">
+  </label>
+
+  <button id="resetImage">Reset Image</button>
+</div>
+
+<div id="imageContainer">
+  <img id="image" src="" alt="Select an image">
+</div>
+</div>
+<script>
+const image = document.getElementById('image');
+const container = document.getElementById('imageContainer');
+let rotation = 0, flipped = false, scale = 1;
+let imgPos = {x:0, y:0}, isDragging = false, dragStart = {x:0, y:0};
+
+// Load image
+document.getElementById('imageSelect').addEventListener('change', function() {
+  const imgFile = this.value;
+  if (imgFile) image.src = imgFile;
+});
+
+// Filters
+function applyFilters() {
+  const brightness = document.getElementById('brightnessSlider').value;
+  const contrast = document.getElementById('contrastSlider').value;
+  const saturation = document.getElementById('saturationSlider').value;
+  const grayscale = document.getElementById('grayscaleSlider').value;
+  image.style.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) grayscale(${grayscale}%)`;
+}
+['brightnessSlider','contrastSlider','saturationSlider','grayscaleSlider'].forEach(id => {
+  document.getElementById(id).addEventListener('input', applyFilters);
+});
+
+// Rotation & flip
+document.getElementById('rotationSlider').addEventListener('input', function() {
+  rotation = this.value;
+  updateTransform();
+});
+document.getElementById('flipButton').addEventListener('click', function() {
+  flipped = !flipped;
+  updateTransform();
+});
+document.getElementById('opacitySlider').addEventListener('input', function() {
+  image.style.opacity = this.value;
+});
+
+function updateTransform() {
+  image.style.transform = `translate(${imgPos.x}px, ${imgPos.y}px) scale(${scale}) rotate(${rotation}deg) scaleX(${flipped?-1:1})`;
+}
+
+// Zoom
+container.addEventListener('wheel', e => {
+  e.preventDefault();
+  const zoomAmount = e.deltaY < 0 ? 0.1 : -0.1;
+  scale = Math.max(scale + zoomAmount, 0.1);
+  updateTransform();
+});
+
+// Drag
+container.addEventListener('mousedown', e => {
+  e.preventDefault();
+  isDragging = true;
+  dragStart.x = e.clientX - imgPos.x;
+  dragStart.y = e.clientY - imgPos.y;
+  container.style.cursor = 'grabbing';
+});
+window.addEventListener('mousemove', e => {
+  if(!isDragging) return;
+  imgPos.x = e.clientX - dragStart.x;
+  imgPos.y = e.clientY - dragStart.y;
+  updateTransform();
+});
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  container.style.cursor = 'grab';
+});
+
+// Reset
+document.getElementById('resetImage').addEventListener('click', () => {
+  rotation = 0; flipped = false; scale = 1; imgPos = {x:0,y:0};
+  document.getElementById('rotationSlider').value = 0;
+  document.getElementById('opacitySlider').value = 1;
+  document.getElementById('brightnessSlider').value = 100;
+  document.getElementById('contrastSlider').value = 100;
+  document.getElementById('saturationSlider').value = 100;
+  document.getElementById('grayscaleSlider').value = 0;
+  image.style.opacity = 1;
+  applyFilters();
+  updateTransform();
+});
+</script>
+
+</body>
+</html>
