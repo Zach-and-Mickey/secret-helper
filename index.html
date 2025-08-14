@@ -173,16 +173,16 @@ nav a:hover {
 <script>
 
 // Create the map first
-const map = L.map('map').setView([40.000, -100.000], 2);
+const map = L.map('map').setView([40.000, -100.000], 2,2);
 
 // Now create the tile layers WITHOUT .addTo(map)
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors',
-  minZoom: 2
+  minZoom: 3
 });
 
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', minZoom: 3
 });
 
 // Add default tile layer to the map
@@ -211,7 +211,7 @@ osm.addTo(map);
     })
     .addTo(map);
 const baseLayers = {
-  "OpenStreetMap": osm,
+  "Street": osm,
   "Satellite": satellite
 };
 
@@ -323,4 +323,5 @@ window.addEventListener('mouseup', e => {
 </script>
 
 </body>
+
 </html>
