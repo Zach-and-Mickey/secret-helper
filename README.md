@@ -1,4 +1,4 @@
-# secret-helper
+# _The Secret: A Treasure Hunt_
 
 This is a website that I made to help people who are trying to solve clues from _The Secret_. _The Secret: A Treasure Hunt_ is a book written by Byron Preiss, first published in 1982. Preiss went around the United States, and potentially Canada, and hid artifacts in 12 different cities. He then came up with riddles and images for each location. The book consists of three different parts, but the part that most people are familiar with is the section with the 12 images and 12 verses. The verses are not matched with images, so the first task is to figure out which verse goes with which image. The general idea is that the image should get you to a city, the verse is more specific and will lead you to the casque. 
 
