@@ -9,23 +9,23 @@
    html, body { display:flex; flex-direction: column; background-color: #41586C; width: 100%; height: 100%; margin:0; padding:0; align-items:center;}
     #map {display: flex; width: 80vw; height: 80vh; border: 4px solid RGB(0,150,255); justify-content: center; align-items: center;}
     h1 { color: rgb(0,150,255); text-decoration: underline wavy; text-underline-offset: 10px; text-align: center; text-shadow: 3px 3px 5px black}
-   #image {pointer-events: none; transition: transform 0.2s ease; z-index: 1000; height: 78vh; width: auto; max-height: 100%;}
+   #image {transition: transform 0.2s ease; z-index: 1000; height: 78vh; width: auto; max-height: 100%;}
 #controls {
   display: flex;
-  flex-wrap: wrap;              /* allow wrapping to new rows */
-  gap: 10px;                    /* space between items */
-  justify-content: center;      /* center them horizontally */
-  background-color: rgba(0, 0, 0, 0.2); /* optional styling */
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.2);
   padding: 10px;
-  border-radius: 8px;           /* optional rounded edges */
-  max-width: 80vw;              /* keeps it from stretching too wide */
+  border-radius: 8px;
+  max-width: 80vw;
 }
 
 #controls label,
 #controls button {
   display: flex;
-  align-items: center;          /* vertically center text/inputs */
-  gap: 5px;                     /* space between label and slider */
+  align-items: center;
+  gap: 5px;
   background: rgba(255,255,255,0.1);
   padding: 5px 8px;
   border-radius: 4px;
@@ -33,22 +33,20 @@
 }
 
 input[type=range] {
-  -webkit-appearance: none; /* Remove default */
+  -webkit-appearance: none;
   appearance: none;
   width: 150px;
   height: 6px;
-  background: #333;  /* Fallback track color before styling */
+  background: #333;
   border-radius: 3px;
 }
 
-/* Track for Chrome/Edge/Safari */
 input[type=range]::-webkit-slider-runnable-track {
   height: 6px;
   background: linear-gradient(to left, rgb(0,150,255), rgb(0,80,150));
   border-radius: 3px;
 }
 
-/* Thumb for Chrome/Edge/Safari */
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -58,7 +56,7 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: 50%;
   border: 2px solid rgb(0,150,255);
   cursor: pointer;
-  margin-top: -5px; /* Centers thumb on track */
+  margin-top: -5px;
 }
    #mapPage {width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;}
 #mapWrapper {
@@ -111,11 +109,11 @@ nav a:hover {
       <a href="imageViewer.html">Image Viewer</a>
     </nav>
   </header>
-<div id = "mapPage">
+<div id="mapPage">
   <h1>The Secret Map Helper!</h1>
-<div id = 'mapWrapper'>
+<div id='mapWrapper'>
   <div id="map">
-      <img id = "image" src = "" style = "opacity:1; display: none;">
+      <img id="image" src="" style="opacity:1; display: none;">
  </div>
 <div id='resizeHandle'></div>
 </div>
@@ -148,119 +146,122 @@ nav a:hover {
       <input type="range" id="rotationSlider" min="0" max="360" step="1" value="0">
     </label>
     <button id="flipButton">Flip Horizontal</button>
-<label>
-  Brightness:
-  <input type="range" id="brightnessSlider" min="0" max="200" step="1" value="100">
-</label>
-<label>
-  Contrast:
-  <input type="range" id="contrastSlider" min="0" max="200" step="1" value="100">
-</label>
-<label>
-  Saturation:
-  <input type="range" id="saturationSlider" min="0" max="200" step="1" value="100">
-</label>
-<label>
-  Grayscale:
-  <input type="range" id="grayscaleSlider" min="0" max="100" step="1" value="0">
-</label>
-  </div>
+    <label>
+      Brightness:
+      <input type="range" id="brightnessSlider" min="0" max="200" step="1" value="100">
+    </label>
+    <label>
+      Contrast:
+      <input type="range" id="contrastSlider" min="0" max="200" step="1" value="100">
+    </label>
+    <label>
+      Saturation:
+      <input type="range" id="saturationSlider" min="0" max="200" step="1" value="100">
+    </label>
+    <label>
+      Grayscale:
+      <input type="range" id="grayscaleSlider" min="0" max="100" step="1" value="0">
+    </label>
+</div>
 <button id="resetImage">Reset Image</button>
-
 </div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script>
-
 // Create the map first
-const map = L.map('map').setView([40.000, -100.000], 2,2);
+const map = L.map('map', {
+  minZoom: 3,
+  maxZoom: 18
+}).setView([40.000, -100.000], 2);
 
-// Now create the tile layers WITHOUT .addTo(map)
+// Create tile layers
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors',
-  minZoom: 3
+  minZoom: 3,
 });
 
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community', minZoom: 3
+  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+  minZoom: 3,
 });
 
-// Add default tile layer to the map
+// Add 거래 tile layer to the map
 osm.addTo(map);
 
-  var popup = L.popup();
+// Popup on map click
+const popup = L.popup();
+function onMapClick(e) {
+  if (imageMode) return; // Ignore map clicks in image mode
+  popup
+    .setLatLng(e.latlng)
+    .setContent("You clicked the map at " + e.latlng.toString())
+    .openOn(map);
+}
+map.on('click', onMapClick);
 
-  function onMapClick(e) {
-    popup
-      .setLatLng(e.latlng)
-      .setContent("You clicked the map at  " + e.latlng.toString())
-      .openOn(map);
-  }
+map.on('zoomend', function () {
+  console.log("Zoom level changed to:", map.getZoom());
+});
 
-  map.on('click', onMapClick);
-
-  map.on('zoomend', function () {
-    console.log("Zoom level changed to:", map.getZoom());
-  });
-
-  L.Control.geocoder({
-    defaultMarkGeocode: false
+// Geocoder control
+L.Control.geocoder({
+  defaultMarkGeocode: false
+})
+  .on('markgeocode', function (e) {
+    map.fitBounds(e.geocode.bbox);
   })
-    .on('markgeocode', function (e) {
-      map.fitBounds(e.geocode.bbox);
-    })
-    .addTo(map);
+  .addTo(map);
+
 const baseLayers = {
-  "Street": osm,
+  "OpenStreetMap": osm,
   "Satellite": satellite
 };
-
 L.control.layers(baseLayers).addTo(map);
 
-//////////////////////////////////////////////////////////     Image Controls     \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
+// Image Controls
 const overlayImg = document.getElementById('image');
-    let rotation = 0;
-    let flipped = false;
+let rotation = 0;
+let flipped = false;
+let imageMode = false;
+let imageScale = 1;
+let imageOffsetX = 0;
+let imageOffsetY = 0;
+let isPanningImage = false;
+let startPanX, startPanY;
 
-    document.getElementById('imageSelect').addEventListener('change', function() {
-      const imgFile = this.value;
-      if (imgFile) {
-        overlayImg.src = imgFile;
-        overlayImg.style.display = 'block';
-      } else {
-        overlayImg.style.display = 'none';
-      }
-    });
+document.getElementById('imageSelect').addEventListener('change', function() {
+  const imgFile = this.value;
+  if (imgFile) {
+    overlayImg.src = imgFile;
+    overlayImg.style.display = 'block';
+  } else {
+    overlayImg.style.display = 'none';
+  }
+});
 
-    document.getElementById('opacitySlider').addEventListener('input', function() {
-      overlayImg.style.opacity = this.value;
-    });
+document.getElementById('opacitySlider').addEventListener('input', function() {
+  overlayImg.style.opacity = this.value;
+});
 
-    document.getElementById('rotationSlider').addEventListener('input', function() {
-      rotation = this.value;
-      applyTransform();
-    });
+document.getElementById('rotationSlider').addEventListener('input', function() {
+  rotation = this.value;
+  applyImageTransform();
+});
 
-    document.getElementById('flipButton').addEventListener('click', function() {
-      flipped = !flipped;
-      applyTransform();
-    });
+document.getElementById('flipButton').addEventListener('click', function() {
+  flipped = !flipped;
+  applyImageTransform();
+});
 
-    function applyTransform() {
-      overlayImg.style.transform = `rotate(${rotation}deg) scaleX(${flipped ? -1 : 1})`;
-    }
 function applyFilters() {
   const brightness = document.getElementById('brightnessSlider').value;
   const contrast = document.getElementById('contrastSlider').value;
   const saturation = document.getElementById('saturationSlider').value;
   const grayscale = document.getElementById('grayscaleSlider').value;
-
   overlayImg.style.filter = 
     `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) grayscale(${grayscale}%)`;
 }
 
-// Add listeners
 document.getElementById('brightnessSlider').addEventListener('input', applyFilters);
 document.getElementById('contrastSlider').addEventListener('input', applyFilters);
 document.getElementById('saturationSlider').addEventListener('input', applyFilters);
@@ -268,19 +269,20 @@ document.getElementById('grayscaleSlider').addEventListener('input', applyFilter
 
 function resizeOverlayImage() {
   const mapEl = document.getElementById('map');
-  overlayImg.style.height = (mapEl.offsetHeight-10) + 'px';
+  overlayImg.style.height = (mapEl.offsetHeight - 10) + 'px';
   overlayImg.style.width = 'auto';
 }
 
 window.addEventListener('resize', resizeOverlayImage);
-
-// Call it initially when an image is loaded
 overlayImg.onload = resizeOverlayImage;
 
-// Resets Image
+// Reset Image
 document.getElementById('resetImage').addEventListener('click', () => {
   rotation = 0;
   flipped = false;
+  imageScale = 1;
+  imageOffsetX = 0;
+  imageOffsetY = 0;
   document.getElementById('rotationSlider').value = 0;
   document.getElementById('opacitySlider').value = 1;
   document.getElementById('brightnessSlider').value = 100;
@@ -288,20 +290,29 @@ document.getElementById('resetImage').addEventListener('click', () => {
   document.getElementById('saturationSlider').value = 100;
   document.getElementById('grayscaleSlider').value = 0;
   overlayImg.style.opacity = 1;
-  applyTransform();
+  overlayImg.style.left = '0px';
+  overlayImg.style.top = '0px';
+  imageMode = false; // Exit image mode on reset
+  // Re-enable map interactions
+  map.dragging.enable();
+  map.scrollWheelZoom.enable();
+  map.doubleClickZoom.enable();
+  map.boxZoom.enable();
+  map.keyboard.enable();
+  if (map.tap) map.tap.enable();
+  overlayImg.style.cursor = 'default';
+  applyImageTransform();
   applyFilters();
 });
 
-/////////////////////////////////////////////////////////////     Map Drag to Resize     \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-
+// Map Drag to Resize
 const wrapper = document.getElementById('mapWrapper');
 const mapEl = document.getElementById('map');
 const handle = document.getElementById('resizeHandle');
-
 let isResizing = false;
 
 handle.addEventListener('mousedown', e => {
+  e.preventDefault();
   isResizing = true;
   document.body.style.userSelect = 'none';
 });
@@ -320,8 +331,78 @@ window.addEventListener('mouseup', e => {
   isResizing = false;
   document.body.style.userSelect = '';
 });
+
+// Image Mode Handling (Toggle with Right-Click)
+overlayImg.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  e.stopPropagation(); // Prevent map from receiving the event
+  imageMode = !imageMode;
+
+  if (imageMode) {
+    // Disable map interactions
+    map.dragging.disable();
+    map.scrollWheelZoom.disable();
+    map.doubleClickZoom.disable();
+    map.boxZoom.disable();
+    map.keyboard.disable();
+    if (map.tap) map.tap.disable();
+    overlayImg.style.cursor = 'grab';
+  } else {
+    // Re-enable map interactions
+    map.dragging.enable();
+    map.scrollWheelZoom.enable();
+    map.doubleClickZoom.enable();
+    map.boxZoom.enable();
+    map.keyboard.enable();
+    if (map.tap) map.tap.enable();
+    overlayImg.style.cursor = 'default';
+  }
+});
+
+// Zoom on wheel in image mode
+overlayImg.addEventListener('wheel', (e) => {
+  if (!imageMode) return;
+  e.preventDefault();
+  e.stopPropagation(); // Prevent map zoom
+  const zoomAmount = e.deltaY < 0 ? 0.1 : -0.1;
+  imageScale = Math.max(0.1, imageScale + zoomAmount);
+  applyImageTransform();
+});
+
+// Start pan in image mode
+overlayImg.addEventListener('mousedown', (e) => {
+  if (!imageMode || e.button === 2) return; // Ignore right-click
+  e.preventDefault();
+  e.stopPropagation();
+  isPanningImage = true;
+  startPanX = e.clientX - imageOffsetX;
+  startPanY = e.clientY - imageOffsetY;
+  overlayImg.style.cursor = 'grabbing';
+});
+
+// Pan move
+window.addEventListener('mousemove', (e) => {
+  if (!isPanningImage) return;
+  e.preventDefault();
+  e.stopPropagation();
+  imageOffsetX = e.clientX - startPanX;
+  imageOffsetY = e.clientY - startPanY;
+  applyImageTransform();
+});
+
+// Stop pan
+window.addEventListener('mouseup', () => {
+  if (!imageMode) return;
+  isPanningImage = false;
+  overlayImg.style.cursor = 'grab';
+});
+
+function applyImageTransform() {
+  overlayImg.style.position = 'relative';
+  overlayImg.style.left = imageOffsetX + 'px';
+  overlayImg.style.top = imageOffsetY + 'px';
+  overlayImg.style.transform = `rotate(${rotation}deg) scaleX(${flipped ? -1 : 1}) scale(${imageScale})`;
+}
 </script>
-
 </body>
-
 </html>
