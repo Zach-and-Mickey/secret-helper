@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <title>The Secret Helper Website</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <style>
     html, body {
       display: flex;
@@ -298,10 +301,7 @@ document.getElementById('imageSelect').addEventListener('change', function() {
     const notesEditor = document.getElementById('notesEditor');
     let currentImage = '';
 
- auth.signInAnonymously().catch(e => {
-      console.error('Error signing in anonymously:', e);
-      alert('Failed to authenticate. Notes will use localStorage fallback.');
-    });
+
 
     // Load notes from Firestore or localStorage
     function loadNotes(imageFile) {
