@@ -42,9 +42,10 @@
   justify-content: center;
   gap: 5px;                     /* space between label and slider */
   background: rgba(255,255,255,0.1);
-  padding: 5px 8px;
+  padding: 5px;
+  margin: 5px;
   border-radius: 4px;
-  color: white;
+  color: #9dee33;
 }
 
 input[type=range] {
@@ -83,6 +84,8 @@ input[type=range]::-webkit-slider-thumb {
       overflow: hidden;
       position: relative;
       cursor: grab;
+      border: 5px solid black;
+      border-top: none;
     }
 
     #image {
@@ -91,11 +94,17 @@ input[type=range]::-webkit-slider-thumb {
       pointer-events: none;
       transition: transform 0.2s ease;
     }
+    #imageTools {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
 
     label {
       display: flex;
       flex-direction: column;
       gap: 5px;
+      text-align: center;
+      color: #9DEE33;
     }
 
     input[type="range"], select, button {
@@ -105,6 +114,8 @@ input[type=range]::-webkit-slider-thumb {
      display: flex;
      position: relative;
      justify-content: center;
+     background-color: #2f3a4b;
+     border-bottom: 5px solid black;
 }
 nav {
   display: flex;
@@ -128,6 +139,26 @@ nav a:hover {
    color: black;
    transition: .5s ease-in-out;
 }
+    #notes {
+       display: flex;
+       flex-direction: column;
+       width: 20vw;
+       height: 100%;
+       background-color: #2f3a4b;
+    }
+    #notesEditor {
+      width: 100%;
+      height: 100%;
+      min-height: 300px;
+      resize: vertical;
+      border: none;
+      outline: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    #notesEditor:focus {
+      outline: 1px solid rgb(0,150,255);
+    }
   </style>
 </head>
 <body>
@@ -158,7 +189,7 @@ nav a:hover {
         <option value="overlay12.png">Image 12</option>
     </select>
   </label>
-
+<div id = 'imageTools'>
   <label>
     Opacity:
     <input type="range" id="opacitySlider" min="0" max="1" step="0.05" value="1">
@@ -169,7 +200,6 @@ nav a:hover {
     <input type="range" id="rotationSlider" min="0" max="360" step="1" value="0">
   </label>
 
-  <button id="flipButton">Flip Horizontal</button>
 
   <label>
     Brightness:
@@ -186,13 +216,24 @@ nav a:hover {
     <input type="range" id="saturationSlider" min="0" max="200" step="1" value="100">
   </label>
 
-  <label>
-    Grayscale:
-    <input type="range" id="grayscaleSlider" min="0" max="100" step="1" value="0">
-  </label>
+      <label>
+        Hue Rotate:
+        <input type="range" id="hueRotateSlider" min="0" max="360" step="1" value="0">
+      </label>
 
+      <label>
+        Sepia:
+        <input type="range" id="sepiaSlider" min="0" max="100" step="1" value="0">
+      </label>
+
+      <label>
+        Invert:
+        <input type="range" id="invertSlider" min="0" max="100" step="1" value="0">
+      </label>
+
+  <button id="flipButton">Flip Horizontal</button>
   <button id="resetImage">Reset Image</button>
-
+</div>
   <label>
     Select Verse:
     <select id="verseSelect">
@@ -219,8 +260,31 @@ nav a:hover {
 <div id="imageContainer">
   <img id="image" src="" alt="Select an image">
 </div>
+
+<div id= 'notes'>
+      <label style="grid-column: 1 / -1;">
+        Notes:
+        <textarea id="notesEditor" placeholder="Enter notes for the selected image..."></textarea>
+      </label>
+ </div>
+    </div>
 </div>
-<script>
+<script>  
+
+// Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyC_7zPSVxGRs937xcx56ORkQpjGs8lvrVw",
+    authDomain: "the-secret-notes.firebaseapp.com",
+    projectId: "the-secret-notes",
+    storageBucket: "the-secret-notes.firebasestorage.app",
+    messagingSenderId: "949281009499",
+    appId: "1:949281009499:web:d1397ff5b03ed98848347e"
+  };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
 const image = document.getElementById('image');
 const container = document.getElementById('imageContainer');
 let rotation = 0, flipped = false, scale = 1;
@@ -231,7 +295,108 @@ document.getElementById('imageSelect').addEventListener('change', function() {
   const imgFile = this.value;
   if (imgFile) image.src = imgFile;
 });
+    const notesEditor = document.getElementById('notesEditor');
+    let currentImage = '';
 
+ auth.signInAnonymously().catch(e => {
+      console.error('Error signing in anonymously:', e);
+      alert('Failed to authenticate. Notes will use localStorage fallback.');
+    });
+
+    // Load notes from Firestore or localStorage
+    function loadNotes(imageFile) {
+      notesEditor.value = '';
+      if (!auth.currentUser) {
+        try {
+          const notes = JSON.parse(localStorage.getItem('imageNotes') || '{}');
+          notesEditor.value = notes[imageFile] || '';
+        } catch (e) {
+          console.error('Error loading local notes:', e);
+          notesEditor.value = 'Error loading notes. Storage unavailable.';
+        }
+        return;
+      }
+      db.collection('notes').doc('shared').get().then(doc => {
+        const notes = doc.exists ? doc.data() : {};
+        notesEditor.value = notes[imageFile] || '';
+      }).catch(e => {
+        console.error('Error loading notes from Firestore:', e);
+        notesEditor.value = 'Error loading notes from Firestore. Using localStorage.';
+        try {
+          const notes = JSON.parse(localStorage.getItem('imageNotes') || '{}');
+          notesEditor.value = notes[imageFile] || '';
+        } catch (e) {
+          notesEditor.value = 'Error loading notes. Storage unavailable.';
+        }
+      });
+    }
+
+    // Save notes to Firestore and localStorage
+    function saveNotes(imageFile) {
+      if (!imageFile) return;
+      try {
+        const notes = JSON.parse(localStorage.getItem('imageNotes') || '{}');
+        notes[imageFile] = notesEditor.value;
+        localStorage.setItem('imageNotes', JSON.stringify(notes));
+        if (auth.currentUser) {
+          db.collection('notes').doc('shared').set({
+            [imageFile]: notesEditor.value
+          }, { merge: true }).catch(e => {
+            console.error('Error saving notes to Firestore:', e);
+            alert('Failed to save notes to Firestore. Saved locally.');
+          });
+        }
+      } catch (e) {
+        console.error('Error saving notes:', e);
+        alert('Failed to save notes. Storage may be unavailable.');
+      }
+    }
+
+    // Real-time listener for Firestore updates
+    function setupRealtimeListener() {
+      if (!auth.currentUser) return;
+      db.collection('notes').doc('shared').onSnapshot(doc => {
+        if (doc.exists && currentImage) {
+          const notes = doc.data();
+          if (notes[currentImage] !== notesEditor.value) {
+            notesEditor.value = notes[currentImage] || '';
+          }
+        }
+      }, e => {
+        console.error('Error in real-time listener:', e);
+      });
+    }
+
+    // Start listener when authenticated
+    auth.onAuthStateChanged(user => {
+      if (user && currentImage) {
+        loadNotes(currentImage);
+        setupRealtimeListener();
+      }
+    });
+
+    imageSelect.addEventListener('change', function() {
+      const imgFile = this.value;
+      if (imgFile) {
+        // Save notes for the previous image
+        saveNotes(currentImage);
+        // Update current image and load new image and notes
+        currentImage = imgFile;
+        image.src = imgFile;
+        loadNotes(imgFile);
+      } else {
+        // Clear image and notes if no image is selected
+        saveNotes(currentImage);
+        currentImage = '';
+        image.src = '';
+        notesEditor.value = '';
+      }
+    });
+
+    // Save notes on input
+    notesEditor.addEventListener('input', () => {
+      saveNotes(currentImage);
+    });
 // Load verse
 const verses = {
   'verse1': `Fortress north
@@ -480,13 +645,22 @@ function applyFilters() {
   const brightness = document.getElementById('brightnessSlider').value;
   const contrast = document.getElementById('contrastSlider').value;
   const saturation = document.getElementById('saturationSlider').value;
-  const grayscale = document.getElementById('grayscaleSlider').value;
-  image.style.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) grayscale(${grayscale}%)`;
+  const hueRotate = document.getElementById('hueRotateSlider').value;
+  const sepia = document.getElementById('sepiaSlider').value;
+  const invert = document.getElementById('invertSlider').value;
+      image.style.filter = `
+        brightness(${brightness}%)
+        contrast(${contrast}%)
+        saturate(${saturation}%)
+        hue-rotate(${hueRotate}deg)
+        sepia(${sepia}%)
+        invert(${invert}%)
+        drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))
+      `;
 }
-['brightnessSlider','contrastSlider','saturationSlider','grayscaleSlider'].forEach(id => {
-  document.getElementById(id).addEventListener('input', applyFilters);
-});
-
+    ['brightnessSlider', 'contrastSlider', 'saturationSlider', 'hueRotateSlider', 'sepiaSlider', 'invertSlider'].forEach(id => {
+      document.getElementById(id).addEventListener('input', applyFilters);
+    });
 // Rotation & flip
 document.getElementById('rotationSlider').addEventListener('input', function() {
   rotation = this.value;
@@ -539,7 +713,9 @@ document.getElementById('resetImage').addEventListener('click', () => {
   document.getElementById('brightnessSlider').value = 100;
   document.getElementById('contrastSlider').value = 100;
   document.getElementById('saturationSlider').value = 100;
-  document.getElementById('grayscaleSlider').value = 0;
+  document.getElementById('sepiaSlider').value = 0;
+  document.getElementById('invertSlider').value = 0;
+  document.getElementById('hueRotateSlider').value = 0;
   image.style.opacity = 1;
   applyFilters();
   updateTransform();
