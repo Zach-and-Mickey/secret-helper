@@ -192,6 +192,28 @@ nav a:hover {
   </label>
 
   <button id="resetImage">Reset Image</button>
+
+  <label>
+    Select Verse:
+    <select id="verseSelect">
+ <option value="">-- Choose --</option>
+        <option value="verse1.txt">Verse  1</option>
+        <option value="verse2.txt">Verse 2</option>
+        <option value="verse3.txt">Verse 3</option>
+        <option value="verse4.txt">Verse 4</option>
+        <option value="verse5.txt">Verse 5</option>
+        <option value="verse6.txt">Verse 6</option>
+        <option value="verse7.txt">Verse 7</option>
+        <option value="verse8.txt">Verse 8</option>
+        <option value="verse9.txt">Verse 9</option>
+        <option value="verse10.txt">Verse 10</option>
+        <option value="verse11.txt">Verse 11</option>
+        <option value="verse12.txt">Verse 12</option>
+    </select>
+  </label>
+
+<div id = 'verseOutput'></div>
+ 
 </div>
 
 <div id="imageContainer">
@@ -210,6 +232,30 @@ document.getElementById('imageSelect').addEventListener('change', function() {
   if (imgFile) image.src = imgFile;
 });
 
+// Load verse
+const verseSelect = document.getElementById('verseSelect');
+    const output = document.getElementById('verseOutput');
+
+    verseSelect.addEventListener('change', () => {
+      const file = verseSelect.value;
+      if (!file) {
+        output.textContent = "Your verse will appear here...";
+        return;
+      }
+
+      fetch(file)
+        .then(response => {
+          if (!response.ok) throw new Error("File not found: " + file);
+          return response.text();
+        })
+        .then(text => {
+          output.textContent = text;
+        })
+        .catch(err => {
+          output.textContent = "Error loading verse.";
+          console.error(err);
+        });
+    });
 // Filters
 function applyFilters() {
   const brightness = document.getElementById('brightnessSlider').value;
