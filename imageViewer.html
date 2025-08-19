@@ -197,18 +197,18 @@ nav a:hover {
     Select Verse:
     <select id="verseSelect">
  <option value="">-- Choose --</option>
-        <option value="verse1.txt">Verse  1</option>
-        <option value="verse2.txt">Verse 2</option>
-        <option value="verse3.txt">Verse 3</option>
-        <option value="verse4.txt">Verse 4</option>
-        <option value="verse5.txt">Verse 5</option>
-        <option value="verse6.txt">Verse 6</option>
-        <option value="verse7.txt">Verse 7</option>
-        <option value="verse8.txt">Verse 8</option>
-        <option value="verse9.txt">Verse 9</option>
-        <option value="verse10.txt">Verse 10</option>
-        <option value="verse11.txt">Verse 11</option>
-        <option value="verse12.txt">Verse 12</option>
+        <option value="verse1">Verse  1</option>
+        <option value="verse2">Verse 2</option>
+        <option value="verse3">Verse 3</option>
+        <option value="verse4">Verse 4</option>
+        <option value="verse5">Verse 5</option>
+        <option value="verse6">Verse 6</option>
+        <option value="verse7">Verse 7</option>
+        <option value="verse8">Verse 8</option>
+        <option value="verse9">Verse 9</option>
+        <option value="verse10">Verse 10</option>
+        <option value="verse11">Verse 11</option>
+        <option value="verse12">Verse 12</option>
     </select>
   </label>
 
@@ -233,29 +233,248 @@ document.getElementById('imageSelect').addEventListener('change', function() {
 });
 
 // Load verse
+const verses = {
+  'verse1': `Fortress north
+Cold as glass
+Friendship south
+Take your task
+To the number
+Nine eight two
+Through the wood
+No lion fears
+In the sky the water veers
+Small of scale
+Step across
+Perspective should not be lost
+In the center of four alike
+Small, split,
+Three winged and slight
+What we take to be
+Our strongest tower of delight
+Falls gently
+In December night
+Looking back from treasure ground
+There's the spout!
+A whistle sounds.`,
+
+  'verse2': `At the place where jewels abound
+Fifteen rows down to the ground
+In the middle of twenty-one
+From end to end
+Only three stand watch
+As the sound of friends
+Fills the afternoon hours
+Here is a sovereign people
+Who build palaces to shelter
+Their heads for a night!
+Gnomes admire
+Fays delight
+The namesakes meeting
+Near this site.`,
+
+  'verse3': `If Thucydides is
+North of Xenophon
+Take five steps
+In the area of his direction
+A green tower of lights
+In the middle section
+Near those
+Who pass the coliseum
+With metal walls
+Face the water
+Your back to the stairs
+Feel at home
+All the letters
+Are here to see
+Eighteenth day
+Twelfth hour
+Lit by lamplight
+In truth, be free.`,
+
+  'verse4': `Beneath two countries
+As the road curves
+In a rectangular plot
+Beneath the tenth stone
+From right to left
+Beneath the ninth row from the top
+Of the wall including small bricks
+Seven steps up you can hop
+From the bottom level
+Socrates, Pindar, Apelles
+Free speech, couplet, birch
+To find casque's destination
+Seek the columns
+For the search.`,
+
+  'verse5': `Lane
+Two twenty two
+You'll see an arc of lights
+Weight and roots extended
+Together saved the site
+Of granite walls
+Wind swept halls
+Citadel in the night
+A wingless bird ascended
+Born of ancient dreams of flight
+Beneath the only standing member
+Of a forest
+To the south
+White stone closest
+At twelve paces
+From the west side
+Get permission
+To dig out.`,
+
+  'verse6': `Of all the romance retold
+Men of tales and tunes
+Cruel and bold
+Seen here
+By eyes of old
+Stand and listen to the birds
+Hear the cool, clear song of water
+Harken to the words:
+Freedom at the birth of a century
+Or May 1913
+Edwin and Edwina named after him
+Or on the eighth a scene
+Where law defended
+Between two arms extended
+Below the bar that binds
+Beside the long palm's shadow
+Embedded in the sand
+Waits the Fair remuneration
+White house close at hand.`,
+
+  'verse7': `At stone wall's door
+The air smells sweet
+Not far away
+High posts are three
+Education and Justice
+For all to see
+Sounds from the sky
+Near ace is high
+Running north, but first across
+In jewel's direction
+Is an object
+Of Twain's attention
+Giant pole
+Giant step
+To the place
+The casque is kept.`,
+
+  'verse8': `View the three stories of Mitchell
+As you walk the beating of the world
+At a distance in time
+From three who lived there
+At a distance in space
+From woman, with harpsichord
+Silently playing
+Step on nature
+Cast in copper
+Ascend the 92 steps
+After climbing the grand 200
+Pass the compass and reach
+The foot of the culvert
+Below the bridge
+Walk 100 paces
+Southeast over rock and soil
+To the first young birch
+Pass three, staying west
+You'll see a letter from the country
+Of wonderstone's hearth
+On a proud, tall fifth
+At its southern foot
+The treasure waits.`,
+
+  'verse9': `The first chapter
+Written in water
+Near men
+With wind rose
+Behind bending branches
+And a green picket fence
+At the base of a tall tree
+You can still hear the honking
+Shell, limestone, silver, salt
+Stars move by day
+Sails pass by night
+Even in darkness
+Like moonlight in teardrops
+Over the tall grass
+Years pass, rain falls.`,
+
+  'verse10': `In the shadow
+Of the grey giant
+Find the arm that
+Extends over the slender path
+In summer
+You'll often hear a whirring sound
+Cars abound
+Although the sign
+Nearby
+Speaks of Indies native
+The natives still speak
+Of him of Hard word in 3 Vols.
+Take twice as many east steps as the hour
+Or more
+From the middle of one branch
+Of the v
+Look down
+And see simple roots
+In rhapsodic man's soil
+Or gaze north
+Toward the isle of B.`,
+
+  'verse11': `Pass two friends of octave
+In December
+Ride the man of oz
+To the land near the window
+There's a road that leads to
+Dark forest
+Where white is in color
+With two maps
+After circle and square
+In July and August
+A path beckons
+To mica and driftwood
+Under that
+Which may be last touched
+Or first seen standing
+Look north at the wing
+And dig
+To achieve
+By dauntless and inconquerable
+Determination
+Your goal.`,
+
+  'verse12': `Where M and B are set in stone
+And to Congress, R is known
+L sits and left
+Beyond his shoulder
+Is the Fair Folks'
+Treasure holder
+The end of ten by thirteen
+Is your clue
+Fence and fixture
+Central too
+For finding jewel casque
+Seek the sounds
+Of rumble
+Brush and music
+Hush.`,
+};
+
 const verseSelect = document.getElementById('verseSelect');
-    const output = document.getElementById('verseOutput');
+const output = document.getElementById('verseOutput');
 
-    verseSelect.addEventListener('change', () => {
-      const file = verseSelect.value;
-      if (!file) {
-        output.textContent = "Your verse will appear here...";
-        return;
-      }
-
-      fetch(file)
-        .then(response => {
-          if (!response.ok) throw new Error("File not found: " + file);
-          return response.text();
-        })
-        .then(text => {
-          output.textContent = text;
-        })
-        .catch(err => {
-          output.textContent = "Error loading verse.";
-          console.error(err);
-        });
-    });
+verseSelect.addEventListener('change', () => {
+  const key = verseSelect.value;
+  if (!key) {
+    output.textContent = "Your verse will appear here...";
+    return;
+  }
+const verseText = verses[key] || "Verse not found.";
+  output.innerHTML = verseText.replace(/\n/g, '<br>')
+});
 // Filters
 function applyFilters() {
   const brightness = document.getElementById('brightnessSlider').value;
