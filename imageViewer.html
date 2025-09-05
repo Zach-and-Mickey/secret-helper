@@ -175,6 +175,9 @@ nav a:hover {
 
 <div id='layout'>
 <div id="sidebar">
+  <button id="signInButton">Sign In with Google</button>
+  <button id="signOutButton" style="display: none;">Sign Out</button>
+  <div id="userStatus"></div>
   <label>
     Select Image:
     <select id="imageSelect">
@@ -266,6 +269,13 @@ nav a:hover {
 </div>
 
 <div id= 'notes'>
+    <label>
+    Notes Mode:
+    <select id="notesMode">
+      <option value="public">Public Notes (Read-Only)</option>
+      <option value="personal" disabled>My Notes</option>
+    </select>
+  </label>
       <label style="grid-column: 1 / -1;">
         Notes:
         <textarea id="notesEditor" placeholder="Enter notes for the selected image..."></textarea>
@@ -278,12 +288,17 @@ nav a:hover {
 // Your web app's Firebase configuration
 firebase.initializeApp(window.firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 const image = document.getElementById('image');
 const container = document.getElementById('imageContainer');
+const notesMode = document.getElementById('notesMode');
+const signInButton = document.getElementById('signInButton');
+const signOutButton = document.getElementById('signOutButton');
+const userStatus = document.getElementById('userStatus');
 let rotation = 0, flipped = false, scale = 1;
 let imgPos = {x:0, y:0}, isDragging = false, dragStart = {x:0, y:0};
-
+let currentMode = 'public'; // Default to public notes (read-only)
 // Load image
 document.getElementById('imageSelect').addEventListener('change', function() {
   const imgFile = this.value;
@@ -292,10 +307,64 @@ document.getElementById('imageSelect').addEventListener('change', function() {
 const notesEditor = document.getElementById('notesEditor');
 let currentImage = '';
 
+// Authentication handling
+signInButton.addEventListener('click', () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then((result) => {
+      console.log('Signed in as:', result.user.displayName);
+      updateNotesModeUI();
+      if (currentImage) loadNotes(currentImage);
+    })
+    .catch((error) => {
+      console.error('Sign-in error:', error);
+      alert('Sign-in failed: ' + error.message);
+    });
+});
+
+signOutButton.addEventListener('click', () => {
+  auth.signOut()
+    .then(() => {
+      console.log('Signed out');
+      updateNotesModeUI();
+      if (currentImage) loadNotes(currentImage);
+    })
+    .catch((error) => {
+      console.error('Sign-out error:', error);
+    });
+});
+
+// Update UI based on auth state
+auth.onAuthStateChanged(user => {
+  if (user) {
+    signInButton.style.display = 'none';
+    signOutButton.style.display = 'block';
+    userStatus.textContent = `Signed in as: ${user.displayName || user.email}`;
+    notesMode.querySelector('option[value="personal"]').disabled = false;
+  } else {
+    signInButton.style.display = 'block';
+    signOutButton.style.display = 'none';
+    userStatus.textContent = 'Not signed in. Viewing public notes (read-only).';
+    notesMode.querySelector('option[value="personal"]').disabled = true;
+    notesMode.value = 'public';
+    currentMode = 'public';
+    notesEditor.readOnly = true;
+    if (currentImage) loadNotes(currentImage);
+  }
+});
+
+// Notes mode toggle
+notesMode.addEventListener('change', () => {
+  currentMode = notesMode.value;
+  notesEditor.readOnly = (currentMode === 'public');
+  if (currentImage) loadNotes(currentImage);
+});
+
 // Load notes from Firestore
 function loadNotes(imageFile) {
   notesEditor.value = '';
-  db.collection('notes').doc('shared').get().then(doc => {
+  const docId = currentMode === 'public' ? 'shared' : auth.currentUser.uid;
+  db.collection('notes').doc(docId).get().then(doc => {
     const notes = doc.exists ? doc.data() : {};
     notesEditor.value = notes[imageFile] || '';
   }).catch(e => {
@@ -306,8 +375,9 @@ function loadNotes(imageFile) {
 
 // Save notes to Firestore
 function saveNotes(imageFile) {
-  if (!imageFile) return;
-  db.collection('notes').doc('shared').set({
+  if (!imageFile || currentMode === 'public') return; // No saving in public mode
+  const docId = auth.currentUser.uid;
+  db.collection('notes').doc(docId).set({
     [imageFile]: notesEditor.value
   }, { merge: true }).catch(e => {
     console.error('Error saving notes to Firestore:', e);
@@ -317,8 +387,10 @@ function saveNotes(imageFile) {
 
 // Real-time listener for Firestore updates
 function setupRealtimeListener() {
-  db.collection('notes').doc('shared').onSnapshot(doc => {
-    if (doc.exists && currentImage) {
+  const docId = currentMode === 'public' ? 'shared' : auth.currentUser?.uid;
+  if (!docId) return;
+  db.collection('notes').doc(docId).onSnapshot(doc => {
+    if (doc.exists && currentImage && notesMode.value === currentMode) {
       const notes = doc.data();
       if (notes[currentImage] !== notesEditor.value) {
         notesEditor.value = notes[currentImage] || '';
@@ -329,30 +401,34 @@ function setupRealtimeListener() {
   });
 }
 
-// Initialize listener
-setupRealtimeListener();
-    imageSelect.addEventListener('change', function() {
-      const imgFile = this.value;
-      if (imgFile) {
-        // Save notes for the previous image
-        saveNotes(currentImage);
-        // Update current image and load new image and notes
-        currentImage = imgFile;
-        image.src = imgFile;
-        loadNotes(imgFile);
-      } else {
-        // Clear image and notes if no image is selected
-        saveNotes(currentImage);
-        currentImage = '';
-        image.src = '';
-        notesEditor.value = '';
-      }
-    });
+// Load image and notes
+imageSelect.addEventListener('change', function() {
+  const imgFile = this.value;
+  if (imgFile) {
+    saveNotes(currentImage); // Save previous notes
+    currentImage = imgFile;
+    image.src = imgFile;
+    loadNotes(imgFile);
+    setupRealtimeListener();
+  } else {
+    saveNotes(currentImage);
+    currentImage = '';
+    image.src = '';
+    notesEditor.value = '';
+  }
+});
 
-    // Save notes on input
-    notesEditor.addEventListener('input', () => {
-      saveNotes(currentImage);
-    });
+// Save notes on input
+notesEditor.addEventListener('input', () => {
+  saveNotes(currentImage);
+});
+
+// Initialize listener and UI
+function updateNotesModeUI() {
+  notesEditor.readOnly = (currentMode === 'public');
+  setupRealtimeListener();
+}
+setupRealtimeListener();
 // Load verse
 const verses = {
   'verse1': `Fortress north
