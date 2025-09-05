@@ -277,8 +277,7 @@ nav a:hover {
 
 // Your web app's Firebase configuration
 firebase.initializeApp(window.firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+const db = firebase.firestore();
 
 const image = document.getElementById('image');
 const container = document.getElementById('imageContainer');
@@ -290,83 +289,48 @@ document.getElementById('imageSelect').addEventListener('change', function() {
   const imgFile = this.value;
   if (imgFile) image.src = imgFile;
 });
-    const notesEditor = document.getElementById('notesEditor');
-    let currentImage = '';
+const notesEditor = document.getElementById('notesEditor');
+let currentImage = '';
 
+// Load notes from Firestore
+function loadNotes(imageFile) {
+  notesEditor.value = '';
+  db.collection('notes').doc('shared').get().then(doc => {
+    const notes = doc.exists ? doc.data() : {};
+    notesEditor.value = notes[imageFile] || '';
+  }).catch(e => {
+    console.error('Error loading notes from Firestore:', e);
+    notesEditor.value = 'Error loading notes from Firestore.';
+  });
+}
 
+// Save notes to Firestore
+function saveNotes(imageFile) {
+  if (!imageFile) return;
+  db.collection('notes').doc('shared').set({
+    [imageFile]: notesEditor.value
+  }, { merge: true }).catch(e => {
+    console.error('Error saving notes to Firestore:', e);
+    alert('Failed to save notes to Firestore.');
+  });
+}
 
-    // Load notes from Firestore or localStorage
-    function loadNotes(imageFile) {
-      notesEditor.value = '';
-      if (!auth.currentUser) {
-        try {
-          const notes = JSON.parse(localStorage.getItem('imageNotes') || '{}');
-          notesEditor.value = notes[imageFile] || '';
-        } catch (e) {
-          console.error('Error loading local notes:', e);
-          notesEditor.value = 'Error loading notes. Storage unavailable.';
-        }
-        return;
-      }
-      db.collection('notes').doc('shared').get().then(doc => {
-        const notes = doc.exists ? doc.data() : {};
-        notesEditor.value = notes[imageFile] || '';
-      }).catch(e => {
-        console.error('Error loading notes from Firestore:', e);
-        notesEditor.value = 'Error loading notes from Firestore. Using localStorage.';
-        try {
-          const notes = JSON.parse(localStorage.getItem('imageNotes') || '{}');
-          notesEditor.value = notes[imageFile] || '';
-        } catch (e) {
-          notesEditor.value = 'Error loading notes. Storage unavailable.';
-        }
-      });
-    }
-
-    // Save notes to Firestore and localStorage
-    function saveNotes(imageFile) {
-      if (!imageFile) return;
-      try {
-        const notes = JSON.parse(localStorage.getItem('imageNotes') || '{}');
-        notes[imageFile] = notesEditor.value;
-        localStorage.setItem('imageNotes', JSON.stringify(notes));
-        if (auth.currentUser) {
-          db.collection('notes').doc('shared').set({
-            [imageFile]: notesEditor.value
-          }, { merge: true }).catch(e => {
-            console.error('Error saving notes to Firestore:', e);
-            alert('Failed to save notes to Firestore. Saved locally.');
-          });
-        }
-      } catch (e) {
-        console.error('Error saving notes:', e);
-        alert('Failed to save notes. Storage may be unavailable.');
+// Real-time listener for Firestore updates
+function setupRealtimeListener() {
+  db.collection('notes').doc('shared').onSnapshot(doc => {
+    if (doc.exists && currentImage) {
+      const notes = doc.data();
+      if (notes[currentImage] !== notesEditor.value) {
+        notesEditor.value = notes[currentImage] || '';
       }
     }
+  }, e => {
+    console.error('Error in real-time listener:', e);
+  });
+}
 
-    // Real-time listener for Firestore updates
-    function setupRealtimeListener() {
-      if (!auth.currentUser) return;
-      db.collection('notes').doc('shared').onSnapshot(doc => {
-        if (doc.exists && currentImage) {
-          const notes = doc.data();
-          if (notes[currentImage] !== notesEditor.value) {
-            notesEditor.value = notes[currentImage] || '';
-          }
-        }
-      }, e => {
-        console.error('Error in real-time listener:', e);
-      });
-    }
-
-    // Start listener when authenticated
-    auth.onAuthStateChanged(user => {
-      if (user && currentImage) {
-        loadNotes(currentImage);
-        setupRealtimeListener();
-      }
-    });
-
+// Initialize listener
+setupRealtimeListener();
     imageSelect.addEventListener('change', function() {
       const imgFile = this.value;
       if (imgFile) {
@@ -716,4 +680,3 @@ document.getElementById('resetImage').addEventListener('click', () => {
 
 </body>
 </html>
-
